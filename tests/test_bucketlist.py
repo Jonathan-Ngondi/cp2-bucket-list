@@ -26,9 +26,8 @@ class BucketListTestCases(TestCase):
     def test_homepage_route(self):
         """Test the route /api/v1/"""
         request = self.client().get('/api/v1/')
-        # response = json.loads(request.data)
         self.assertEqual(request.status_code, 200)
-        # self.assertEqual(response, {'Message':'Welcome to bucketlistapi'})
+     
 
 
     def test_login(self):
@@ -36,8 +35,7 @@ class BucketListTestCases(TestCase):
         user = {'username': 'JonBones', 'password': 'Jones'}
         response = self.client().post('/api/v1/auth/login', data=user)
         self.assertEqual(response.status_code, 202)
-        # resp_data = json.loads(response.data)
-        # self.assertIn(resp_data, 'Authorization')
+    
 
     def test_login_with_bad_credectials(self):
         """Tests that a user with bad credentials can't be logged in."""
