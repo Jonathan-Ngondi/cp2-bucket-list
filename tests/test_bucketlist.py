@@ -71,8 +71,6 @@ class BucketListTestCases(TestCase):
                 'password2': 'ElPistolero'}
         response = self.client().post('/api/v1/auth/register', data=user)
         self.assertEqual(response.status_code, 302)
-        # resp_data = json.loads(response.data)
-        # self.assertIn(resp_data, 'Authorization')
 
     def test_bucketlist_creation(self):
         """"Test that the API can create a bucketlist (POST, request)"""

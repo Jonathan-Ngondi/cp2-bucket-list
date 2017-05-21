@@ -1,11 +1,9 @@
 import os
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
-from app import DB as db, create_app 
-from app import models
+from app import db, models, create_app
 
 app = create_app(config_name=os.getenv('APP_SETTINGS'))
-migrate = Migrate(app, db)
 manager = Manager(app)
 
 @manager.command
@@ -21,6 +19,7 @@ def drop_db(name):
     os.system('dropdb {}'.format(name))
 
 
+migrate = Migrate(app, db)
 manager.add_command('db', MigrateCommand)
 
 if __name__ == '__main__':
