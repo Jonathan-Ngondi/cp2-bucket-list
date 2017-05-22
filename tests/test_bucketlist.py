@@ -1,8 +1,9 @@
 from flask_testing import TestCase
 import os
 import json 
-from app import create_app, DB as db
+from app import create_app, db
 from app.models import User
+
 
 class BucketListTestCases(TestCase):
     """This class represents the bucketlist test cases"""
@@ -16,15 +17,16 @@ class BucketListTestCases(TestCase):
         self.app = create_app(config_name="testing")
         self.client = self.app.test_client
         self.bucketlist = {'name': 'Go to Molo for vacation'}
-        # self.user = User(username='JonBones', password='Jones', email='jonbones@example.com')
-        # db.session.add(self.user)
-        # db.session.commit()
+        self.user = User(username='JonBones', password='Jones', email='jonbones@example.com')
+        db.session.add(self.user)
+        db.session.commit()
 
         with self.app.app_context():
             db.create_all()
 
     def test_homepage_route(self):
         """Test the route /api/v1/"""
+        
         request = self.client().get('/api/v1/')
         self.assertEqual(request.status_code, 200)
      
@@ -33,6 +35,7 @@ class BucketListTestCases(TestCase):
     def test_login(self):
         """Tests that a user can be logged into the app and a token generated."""
         user = {'username': 'JonBones', 'password': 'Jones'}
+        app.run.
         response = self.client().post('/api/v1/auth/login', data=user)
         self.assertEqual(response.status_code, 202)
     
