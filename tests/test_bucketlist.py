@@ -1,51 +1,45 @@
+import unittest
 from flask_testing import TestCase
 import os
 import json 
 from app import create_app, db
-from app.models import User
+from app.v1.models import User
 
 
-class BucketListTestCases(TestCase):
+class BucketListTestCases(unittest.TestCase):
     """This class represents the bucketlist test cases"""
-
-    def create_app(self):
-        self.app = create_app(config_name='testing')
-        return self.app
-
+       
     def setUp(self):
         """"Initialize the app and set up test variables."""
         self.app = create_app(config_name="testing")
         self.client = self.app.test_client
         self.bucketlist = {'name': 'Go to Molo for vacation'}
-        self.user = User(username='JonBones', password='Jones', email='jonbones@example.com')
-        db.session.add(self.user)
-        db.session.commit()
-
+        self.user_details = {"username":"Tester", "password1":"Function","password2":"Function", "email":"tester@example.com"}
+        self.user_login = {"username":"Tester","password":"Function"}
         with self.app.app_context():
             db.create_all()
 
     def test_homepage_route(self):
         """Test the route /api/v1/"""
         
-        request = self.client().get('/api/v1/')
+        request = self.client().get('/')
         self.assertEqual(request.status_code, 200)
      
 
 
     def test_login(self):
         """Tests that a user can be logged into the app and a token generated."""
-        user = {'username': 'JonBones', 'password': 'Jones'}
-        app.run.
-        response = self.client().post('/api/v1/auth/login', data=user)
-        self.assertEqual(response.status_code, 202)
+        response = self.client().post('/api/v1/auth/login', data=self.user_login    )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(response.data,(''))
     
 
-    def test_login_with_bad_credectials(self):
+    def test_login_with_bad_password(self):
         """Tests that a user with bad credentials can't be logged in."""
         user = {'username': 'JonBones',
                 'password': 'Jabbafoo',
                }
-        response = self.client().post('/api/v1/auth/login')
+        response = self.client().post('/api/v1/auth/login', data=user)
         self.assertEqual(response.status_code, 201)
 
     def test_auth_user_registration_with_bad_credentials(self):
@@ -62,9 +56,10 @@ class BucketListTestCases(TestCase):
         user = {'username': 'JonBones',
                 'password': 'Jabbafoo',
                }
-        response = self.client().post('api/v1/auth/login', user)
+        user_json = json.dumps(user)
+        response = self.client().post('api/v1/auth/login', body=user_json)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(response.data, 'token')
+        self.assertIn(response.body, 'token')
 
     def test_auth_user_registration(self):
         """Test that a new user can be registered and it generates a token."""
@@ -72,7 +67,7 @@ class BucketListTestCases(TestCase):
                 'email': 'Thiago@example.com',
                 'password': 'ElPistolero',
                 'password2': 'ElPistolero'}
-        response = self.client().post('/api/v1/auth/register', data=user)
+        response = self.client().post('api/v1/auth/register', data=user)
         self.assertEqual(response.status_code, 302)
 
     def test_bucketlist_creation(self):
