@@ -15,11 +15,13 @@ def create_db(name):
     os.system('createdb {}'.format(name))
     db.create_all()
     db.session.commit()
+    print("{} has been successfully created.".format(name))
 
 @manager.command
 def drop_db(name):
     """Deletes a database"""
     os.system('dropdb {}'.format(name))
+    print("{} has been deleted.".format(name))
 
 
 migrate = Migrate(app, db)
