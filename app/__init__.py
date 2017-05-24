@@ -69,37 +69,6 @@ def create_app(config_name):
         else:
             return jsonify({'message':'There was a problem with the username or password.'}), 400
 
-    @app.route('/api/v1/bucketlists/?q=<string:id>', methods=['GET'])
-    def get_bucketlist_by_name(id):
-        id = request.args.get('q')
-        auth = User.verify_token(secret)
-        if type(auth) is json:
-            return auth
-        else:
-            try:
-                user_query = User.query.filter_by(username=auth['username'])
-                user = [user for user in user_query] 
-                bucketlist_query = Bucketlist.query.filter_by(name=id)
-                bucketlist = [bucketlist for bucketlist in bucketlist_query]
-                item_query = Items.query.filter_by(bucketlist_id=id)
-                results = {'id': bucketlist[0].id_key,
-                                'name':bucketlist[0].name,
-                                'items': [{          
-                                            'id': item.id,
-                                            'name': item.name,
-                                            'date_created': item.date_created,
-                                            'date_modified': item.date_modified
-                                
-                                } for item in item_query],
-                                'date_created': bucketlist[0].date_created,
-                                'date_modified': bucketlist[0].date_modified,
-                                'created_by': user[0].username
-                                }
-                return jsonify(results), 200
-            except IndexError:
-                return jsonify({"Error":"This page doesn't exist"}), 404
-
-
 
     @app.route('/api/v1/bucketlists', methods=['GET'])
     def view():
