@@ -44,7 +44,7 @@ class User(db.Model):
     @staticmethod
     def verify_token(secret):
         """Verifies the token passed in the header."""
-        token = request.headers.get("Token")
+        token = request.headers.get("token")
         if token is None:
             abort(401)
         try:
