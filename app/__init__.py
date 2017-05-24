@@ -30,12 +30,15 @@ def create_app(config_name):
     @app.route('/api/v1/auth/register', methods=['POST'])
     def register_user():
             """Registers a user and saves them to the database."""
+            request.get_json(force=True)
             username = request.json['username']
             email = request.json['email']
             password1 = request.json['password1']
             password2 = request.json['password2']
             check = User.query.filter_by(username=username)
             check_list = [user.username for user in check]
+            if check_list != []:
+                return jsonify({"message":"That username already exists."})
             if not str(username).isalpha():
                 return jsonify({"message": "That is an invalid username"})
 
@@ -46,11 +49,12 @@ def create_app(config_name):
                 
                 return jsonify({'message': 'User {} has been successfully created'.format(username)}), 201
             else:
-                return jsonify({'message': 'That username already exists'}), 
+                return jsonify({'message': "Your passwords don't match."}), 
 
     @app.route('/api/v1/auth/login', methods=['POST'])
     def login_user():
         """Allows user to login and returns a token value."""
+        request.get_json(force=True)
         username = request.json['username']
         password = request.json['password']
         query = User.query.filter_by(username=username)
@@ -129,6 +133,7 @@ def create_app(config_name):
     @app.route('/api/v1/bucketlists', methods=['POST'])
     def add_bucketlist():
         """Adds a user's bucketlist to the database."""
+        request.get_json(force=True)
         auth = User.verify_token(secret)
         if type(auth) is json:
             return auth
@@ -149,6 +154,7 @@ def create_app(config_name):
     @app.route('/api/v1/bucketlists/<int:id>', methods=['PUT'])
     def modify_bucketlist(id):
         """Allows the user to modify a bucketlist, and saves to the database."""
+        request.get_json(force=True)
         auth = User.verify_token(secret)
         if type(auth) is json:
             return auth
@@ -228,6 +234,7 @@ def create_app(config_name):
         """
         Allows you to create a bucketlist item via a bucketlist id and save it to the db.
         """
+        request.get_json(force=True)
         auth = User.verify_token(secret)
         if type(auth) is json:
             return auth
@@ -251,6 +258,7 @@ def create_app(config_name):
         Allows you to modify a bucketlist item by bucketlist id as well as item id and save to
         the db.
         """
+        request.get_json(force=Truea)
         auth = User.verify_token(secret)
         if type(auth) is json:
             return auth
@@ -279,7 +287,6 @@ def create_app(config_name):
             bucketlist = [bucketlist for bucketlist in bucketlist_query]
             item_query = Items.query.filter_by(id=item_id)
             item = [item for item in item_query]
-            import pdb; pdb.set_trace()
             item[0].delete()
 
             return jsonify\
