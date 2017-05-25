@@ -69,7 +69,7 @@ class BucketListTestCases(unittest.TestCase):
                 'password2': 'Function'})
         response = self.client().post('/api/v1/auth/register', data=user)
         json_dict = json.loads(response.data)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 409)
         self.assertIn("That username already exists", json_dict['message'])
         
     def test_login_user_token_generated(self):
