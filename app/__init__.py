@@ -27,7 +27,7 @@ def create_app(config_name):
         """Greets user with a message"""
         return jsonify({'Message':'Welcome to BucketlistAPI'})
 
-    @app.route('/api/v1/auth/register   ', methods=['POST'])
+    @app.route('/api/v1/auth/register', methods=['POST'])
     def register_user():
             """Registers a user and saves them to the database."""
             request.get_json(force=True)
@@ -38,7 +38,7 @@ def create_app(config_name):
             check = User.query.filter_by(username=username)
             check_list = [user.username for user in check]
             if check_list != []:
-                return jsonify({"message":"That username already exists."})
+                return jsonify({"message":"That username already exists."}), 409
             if not str(username).isalpha():
                 return jsonify({"message": "That is an invalid username"})
 
