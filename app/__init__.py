@@ -16,7 +16,7 @@ def create_app(config_name):
     api = Blueprint('api',__name__)
     app.config.from_object(app_config[config_name])
     app.register_blueprint(api, url_prefix='/api/v1.0')
-    app.config['JSON_SORT_KEYS'] = False
+    app.config['JSON_SORT_KEYS']
     secret = app.config['SECRET_KEY']
     db.init_app(app)
     with app.app_context():
@@ -30,44 +30,50 @@ def create_app(config_name):
     @app.route('/api/v1/auth/register', methods=['POST'])
     def register_user():
             """Registers a user and saves them to the database."""
-            request.get_json(force=True)
-            username = request.json['username']
-            email = request.json['email']
-            password1 = request.json['password1']
-            password2 = request.json['password2']
-            check = User.query.filter_by(username=username)
-            check_list = [user.username for user in check]
-            if check_list != []:
-                return jsonify({"message":"That username already exists."}), 409
-            if not str(username).isalpha():
-                return jsonify({"message": "That is an invalid username"})
+            try:
+                request.get_json(force=True)
+                username = request.json['username']
+                email = request.json['email']
+                password1 = request.json['password1']
+                password2 = request.json['password2']
+                check = User.query.filter_by(username=username)
+                check_list = [user.username for user in check]
+                if check_list != []:
+                    return jsonify({"message":"That username already exists."}), 409
+                if not str(username).isalpha():
+                    return jsonify({"message": "That is an invalid username"})
 
-            if password1 == password2 and check_list == []:
-                new_user = {'username': username, 'password':password1,'email': email}
-                newUser = User(username=username, password=User.hash_password(password1), email=email)
-                newUser.save()
-                
-                return jsonify({'message': 'User {} has been successfully created'.format(username)}), 201
-            else:
-                return jsonify({'message': "Your passwords don't match."}), 400
+                if password1 == password2 and check_list == []:
+                    new_user = {'username': username, 'password':password1,'email': email}
+                    newUser = User(username=username, password=User.hash_password(password1), email=email)
+                    newUser.save()
+                    
+                    return jsonify({'message': 'User {} has been successfully created'.format(username)}), 201
+                else:
+                    return jsonify({'message': "Your passwords don't match."}), 400
+            except IndexError:
+                return jsonify({"Error":"Please use the following format '{'username':'','password1':'','password2':'','email':''}"})
 
     @app.route('/api/v1/auth/login', methods=['POST'])
     def login_user():
         """Allows user to login and returns a token value."""
-        request.get_json(force=True)
-        username = request.json['username']
-        password = request.json['password']
-        query = User.query.filter_by(username=username)
-        user = [{'username':user.username, 'password':user.password} for user in query]
+        try:
+            request.get_json(force=True)
+            username = request.json['username']
+            password = request.json['password']
+            query = User.query.filter_by(username=username)
+            user = [{'username':user.username, 'password':user.password} for user in query]
 
-        if User.check_password(user[0]['password'], password) and user != []:
-            json_data = {'username':username, 'password': password}
-            token = jwt.encode(json_data, secret, algorithm='HS256')
+            if User.check_password(user[0]['password'], password) and user != []:
+                json_data = {'username':username, 'password': password}
+                token = jwt.encode(json_data, secret, algorithm='HS256')
 
-            return jsonify({'User': user[0], 'token': str(token)}), 200
+                return jsonify({'User': user[0], 'token': str(token)}), 200
 
-        else:
-            return jsonify({'message':'There was a problem with the username or password.'}), 400
+            else:
+                return jsonify({'message':'There was a problem with the username or password.'}), 400
+        except IndexError:
+            return jsonify({'Error':'There is a problem with your username and password.'}), 400
 
 
     @app.route('/api/v1/bucketlists', methods=['GET'])
@@ -77,15 +83,16 @@ def create_app(config_name):
 		'/api/v1/bucketlists', 
 		start=int(request.args.get('start', 1)), 
 		limit=int(request.args.get('limit', 5)),
+        page=int(request.args.get('page', 1)),
         q=str(request.args.get('q',''))
 	)), 200
 
 
-    def get_all_bucketlists(Class,url, start, limit,    q):
+    def get_all_bucketlists(Class,url, start, limit, page, q):
         """Get's all the bucketlists for a user and displays their info."""
         auth = User.verify_token(secret)
-        if type(auth) is json:
-            return auth
+        if type(auth) is not dict:
+            return jsonify(auth[0])
         else:
             user_query = User.query.filter_by(username=auth['username'])
             user = [user for user in user_query]    
@@ -95,8 +102,10 @@ def create_app(config_name):
             obj = {}
             obj['q'] = q
             obj['start'] = start
+            obj['page'] = page
             obj['limit'] = limit
             obj['count'] = count
+            
 
             if q == '':
                 #Make the 'previous' url
@@ -104,15 +113,17 @@ def create_app(config_name):
                     obj['previous'] = ''
                 else:
                     start_text = max(1, start-limit)
-                    limit_text = start - 1
-                    obj['previous'] = url + '?start={}&limit={}'.format(start_text, limit_text)
+                    page_text = page-1
+                    limit_text = limit
+                    obj['previous'] = url + '?page={}&start={}&limit={}'.format(page_text, start_text, limit_text)
 
                 #Make the 'next' url
                 if start + limit > count:
                     obj['next'] = ''
                 else:
                     start_text = start + limit
-                    obj['next'] = url + '?start={}&limit={}'.format(start_text, limit)
+                    page_text = page + 1
+                    obj['next'] = url + '?page={}&start={}&limit={}'.format(page_text, start_text, limit)
                 
                 bucketlists_paginated = bucketlists[(start -1):(start -1 + limit)]
                 item_query = Items.query.filter_by(bucketlist_id=id)
@@ -132,29 +143,26 @@ def create_app(config_name):
             
             else:
                 try:
-                    bucketlist_query_q = Bucketlist.query.filter_by(name=q)
+                    bucketlist_query_q = Bucketlist.query.filter_by(created_by=user[0].id).filter(Bucketlist.name.ilike('%'+q+'%'))
                     bucketlist_q = [bucketlist for bucketlist in bucketlist_query_q]
-                    item_query_q = Items.query.filter_by(bucketlist_id=bucketlist_q[0].id_key)
-                    item_q = [items for items in item_query_q]
-                    results = {'id': bucketlist_q[0].id_key,
-                                        'name':bucketlist_q[0].name,
-                                        'items': [{          
-                                                'id': item.id,
-                                                'name': item.name,
-                                                'date_created': item.date_created,
-                                                'date_modified': item.date_modified
-                                    
-                                    } for item in item_q],
-                                        'date_created': bucketlist_q[0].date_created,
-                                        'date_modified': bucketlist_q[0].date_modified,
+                    q_results = []
+                    for bucketlist in bucketlist_q:
+                        item_query_q = Items.query.filter_by(bucketlist_id=bucketlist.id_key)
+                        results = {'id': bucketlist.id_key,
+                                        'name':bucketlist.name,
+                                        'items': item_query_q.count(),
+                                        'date_created': bucketlist.date_created,
+                                        'date_modified': bucketlist.date_modified,
                                         'created_by': user[0].username
-                                        }
-                    obj['results'] = results
-                    obj['count'] = 1
+                                        } 
+                        q_results.append(results)
+                    
+                    obj['results'] = q_results
+                    obj['count'] = len(bucketlist_q)
                     obj['start'] = 1
-                    obj['limit'] = 1
+                    obj['limit'] = 5
                 except IndexError:
-                    return {"Error":"There is no bucketlist by that name"}
+                    return {"Error":"There is no bucketlist by that name"}, 404
             
             return obj
 
@@ -164,8 +172,8 @@ def create_app(config_name):
         request.get_json(force=True)
         auth = User.verify_token(secret)
 
-        if type(auth) is json:
-            return auth
+        if type(auth) is not dict:
+            return abort(401)
         else:
             try:
                 user_query = User.query.filter_by(username=auth['username'])
@@ -185,8 +193,8 @@ def create_app(config_name):
         """Allows the user to modify a bucketlist, and saves to the database."""
         request.get_json(force=True)
         auth = User.verify_token(secret)
-        if type(auth) is json:
-            return auth
+        if type(auth) is not dict:
+            return jsonify(auth[0])
         else:
             try:
                 user_query = User.query.filter_by(username=auth['username'])
@@ -206,8 +214,8 @@ def create_app(config_name):
     def delete_bucketlist(id):
         """Delete's a user's bucketlist from the database."""
         auth = User.verify_token(secret)
-        if type(auth) is json:
-            return auth
+        if type(auth) is not dict:
+            return jsonify(auth[0])
         else:
             
             try: 
@@ -221,7 +229,7 @@ def create_app(config_name):
                 bucketlist[0].delete()
                 
 
-                return jsonify({"message":"You're bucketlist {} has been successfully deleted".format(bucketlist_name)})
+                return jsonify({"message":"You're bucketlist {} has been successfully deleted".format(bucketlist_name)}), 200
             
             except IndexError:
                 return jsonify({"Message":"That bucketlist id does not exist, please try again."}), 404
@@ -230,8 +238,8 @@ def create_app(config_name):
     def get_bucketlist_by_id(id):
         """Get's a bucketlist by id and returns the values."""
         auth = User.verify_token(secret)
-        if type(auth) is json:
-            return auth
+        if type(auth) is not dict:
+            return jsonify(auth[0])
         else:
             try:
                 user_query = User.query.filter_by(username=auth['username'])
@@ -265,8 +273,8 @@ def create_app(config_name):
         """
         request.get_json(force=True)
         auth = User.verify_token(secret)
-        if type(auth) is json:
-            return auth
+        if type(auth) is not dict:
+            return jsonify(auth[0])
         else:
             try:
                 bucketlist_query = Bucketlist.query.filter_by(id_key=id) 
@@ -289,8 +297,8 @@ def create_app(config_name):
         """
         request.get_json(force=True)
         auth = User.verify_token(secret)
-        if type(auth) is json:
-            return auth
+        if type(auth) is not dict:
+            return jsonify(auth[0])
         else:
             bucketlist_query = Bucketlist.query.filter_by(id_key=id)
             bucketlist = [bucketlist for bucketlist in bucketlist_query]
@@ -309,8 +317,8 @@ def create_app(config_name):
         Deletes a bucketlist item by taking in the bucketlist id as well as the item id.
         """
         auth = User.verify_token(secret)
-        if type(auth) is json:
-            return auth
+        if type(auth) is not dict:
+            return jsonify(auth[0])
         else:
             bucketlist_query = Bucketlist.query.filter_by(id_key=id)
             bucketlist = [bucketlist for bucketlist in bucketlist_query]
