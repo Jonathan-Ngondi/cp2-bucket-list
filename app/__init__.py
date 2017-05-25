@@ -108,8 +108,26 @@ def create_app(config_name):
             
 
             if q == '':
+                if page != 1 and count > limit:
+                    #Make the previous url
+                    
+                    start = limit*(page-1) +1
+                    obj['start'] = start
+                    start_text = start - limit
+                    page_text = page - 1
+                    limit_text = limit
+                    obj['previous'] = url + '?page={}&start={}&limit={}'.format(page_text, start_text, limit_text) 
+
+                    #Make the 'next' url
+                    if start + limit > count:
+                        obj['next'] = ''
+                    else:
+                        start_text = start + limit
+                        page_text = page + 1
+                        obj['next'] = url + '?page={}&start={}&limit={}'.format(page_text, start_text, limit)
+                    
                 #Make the 'previous' url
-                if start == 1:
+                elif start == 1:
                     obj['previous'] = ''
                 else:
                     start_text = max(1, start-limit)
