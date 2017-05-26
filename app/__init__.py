@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from instance.config import app_config
 import json
 import jwt
+import re
 
 
 db = SQLAlchemy()
@@ -34,13 +35,16 @@ def create_app(config_name):
                 request.get_json(force=True)
                 username = request.json['username']
                 email = request.json['email']
+                if not re.match(r"^[A-Za-z0-9\.\+_-]+@[A-Za-z0-9\._-]+\.[a-zA-Z]*$",email):
+                    return jsonify({"Error":"There was a problem with your email"}), 400
+
                 password1 = request.json['password1']
                 password2 = request.json['password2']
                 check = User.query.filter_by(username=username)
                 check_list = [user.username for user in check]
                 if check_list != []:
                     return jsonify({"message":"That username already exists."}), 409
-                if not str(username).isalpha():
+                if not re.match(r"^[A-Za-z0-9]*$", username):
                     return jsonify({"message": "That is an invalid username"})
 
                 if password1 == password2 and check_list == []:
