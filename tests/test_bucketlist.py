@@ -1,8 +1,7 @@
 import unittest
-from flask_testing import TestCase
 import json 
 from app import create_app, db
-from app.v1.models import User
+
 
 
 class BucketListTestCases(unittest.TestCase):
