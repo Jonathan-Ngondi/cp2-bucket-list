@@ -49,10 +49,9 @@ class User(db.Model):
             abort(401)
         try:
             decoded_data = jwt.decode(token, secret)
-        except jwt.ExpiredSignatureError:
-            return jsonify({"message":"Your token has expired, please login again."})
-        except jwt.InvalidTokenError:
-            return jsonify({"message":"Your token is invalid, use a valid token"})
+        except:
+            return "Your token has expired, please login again."
+        
         return decoded_data
 
     def save(self):

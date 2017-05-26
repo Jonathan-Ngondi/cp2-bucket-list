@@ -95,8 +95,10 @@ def create_app(config_name):
     def get_all_bucketlists(Class,url, start, limit, page, q):
         """Get's all the bucketlists for a user and displays their info."""
         auth = User.verify_token(secret)
-        if type(auth) is not dict:
-            return jsonify(auth[0])
+        
+        if type(auth) is str:
+            message = {"message": auth}
+            return jsonify(message)
         else:
             user_query = User.query.filter_by(username=auth['username'])
             user = [user for user in user_query]    
@@ -110,11 +112,10 @@ def create_app(config_name):
             obj['limit'] = limit
             obj['count'] = count
             
-
+            #Pagination Code
             if q == '':
                 if page != 1 and count > limit:
-                    #Make the previous url
-                    
+                    #Make the 'previous' url
                     start = limit*(page-1) +1
                     obj['start'] = start
                     start_text = start - limit
@@ -129,7 +130,8 @@ def create_app(config_name):
                         start_text = start + limit
                         page_text = page + 1
                         obj['next'] = url + '?page={}&start={}&limit={}'.format(page_text, start_text, limit)
-                    
+
+                #Case where the page is not provided  
                 #Make the 'previous' url
                 elif start == 1:
                     obj['previous'] = ''
@@ -164,6 +166,7 @@ def create_app(config_name):
                 obj['results'] = obj_results
             
             else:
+                #Search function using q
                 try:
                     bucketlist_query_q = Bucketlist.query.filter_by(created_by=user[0].id).filter(Bucketlist.name.ilike('%'+q+'%'))
                     bucketlist_q = [bucketlist for bucketlist in bucketlist_query_q]
