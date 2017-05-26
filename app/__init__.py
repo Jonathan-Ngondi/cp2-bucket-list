@@ -210,7 +210,7 @@ def create_app(config_name):
                 
                 return jsonify({"Message":"Please user the format {'name':'String'} to add a bucketlist."}), 400 
         
-    @app.route('/api/v1/bucketlists/<int:id>', methods=['PUT'])
+    @app.route('/api/v1/bucketlists/<int:b_id>', methods=['PUT'])
     def modify_bucketlist(b_id):
         """Allows the user to modify a bucketlist, and saves to the database."""
         request.get_json(force=True)
@@ -225,14 +225,13 @@ def create_app(config_name):
                 bucketlist = [bucketlist for bucketlist in bucketlist_query]
                 bucketlist[0].name = request.json['name']
                 bucketlist[0].save()
-                all_bucketlists_query = Bucketlist.query.filter_by(created_by=user[0].id)
                 bucketlists = [bucketlist.name for bucketlist in bucketlist_query]
 
                 return jsonify({'bucketlist': bucketlists}), 201
             except IndexError:
                 return jsonify({"Message":"That bucketlist id does not exist, please try again."}), 400
 
-    @app.route('/api/v1/bucketlists/<int:id>', methods= ['DELETE'])
+    @app.route('/api/v1/bucketlists/<int:b_id>', methods= ['DELETE'])
     def delete_bucketlist(b_id):
         """Delete's a user's bucketlist from the database."""
         auth = User.verify_token(secret)
@@ -256,8 +255,8 @@ def create_app(config_name):
             except IndexError:
                 return jsonify({"Message":"That bucketlist id does not exist, please try again."}), 404
 
-    @app.route('/api/v1/bucketlists/<int:id>', methods=['GET'])
-    def get_bucketlist_by_id(id):
+    @app.route('/api/v1/bucketlists/<int:b_id>', methods=['GET'])
+    def get_bucketlist_by_id(b_id):
         """Get's a bucketlist by id and returns the values."""
         auth = User.verify_token(secret)
         if type(auth) is not dict:
@@ -266,9 +265,9 @@ def create_app(config_name):
             try:
                 user_query = User.query.filter_by(username=auth['username'])
                 user = [user for user in user_query] 
-                bucketlist_query = Bucketlist.query.filter_by(id_key=id)
+                bucketlist_query = Bucketlist.query.filter_by(id_key=b_id)
                 bucketlist = [bucketlist for bucketlist in bucketlist_query]
-                item_query = Items.query.filter_by(bucketlist_id=id)
+                item_query = Items.query.filter_by(bucketlist_id=b_id)
                 results = {'id': bucketlist[0].id_key,
                                 'name':bucketlist[0].name,
                                 'items': [{   
@@ -288,7 +287,7 @@ def create_app(config_name):
 
 
 
-    @app.route('/api/v1/bucketlists/<int:id>/items', methods=['POST'])
+    @app.route('/api/v1/bucketlists/<int:b_id>/items', methods=['POST'])
     def create_bucketlist_item(b_id):
         """
         Allows you to create a bucketlist item via a bucketlist id and save it to the db.
@@ -311,7 +310,7 @@ def create_app(config_name):
                 return jsonify({"Message":"That bucketlist id does not exist, please try again."}), 400
 
         
-    @app.route('/api/v1/bucketlists/<int:id>/items/<item_id>', methods=['PUT'])
+    @app.route('/api/v1/bucketlists/<int:b_id>/items/<item_id>', methods=['PUT'])
     def modify_bucketlist_item(b_id, item_id):
         """
         Allows you to modify a bucketlist item by bucketlist id as well as item id and save to
@@ -333,7 +332,7 @@ def create_app(config_name):
         
             return jsonify({bucketlist[0].name: new_item}), 201
 
-    @app.route('/api/v1/bucketlists/<id>/items/<item_id>', methods=['DELETE'])
+    @app.route('/api/v1/bucketlists/<b_id>/items/<item_id>', methods=['DELETE'])
     def delete_bucketlist_item(b_id, item_id):
         """
         Deletes a bucketlist item by taking in the bucketlist id as well as the item id.

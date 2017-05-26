@@ -1,8 +1,7 @@
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy.orm import relationship
 from sqlalchemy import ForeignKey
-from flask import request, abort, jsonify
+from flask import request, abort
 import jwt
 import datetime
 
@@ -18,7 +17,6 @@ class User(db.Model):
     username = db.Column(db.String(30))
     password = db.Column(db.String(255))
     email = db.Column(db.String(50))
-    user_bucketlists = db.relationship("Bucketlist", backref="users")
 
     def __init__(self, username, password, email):
         self.username = username
@@ -73,7 +71,6 @@ class Bucketlist(db.Model):
     date_created = db.Column(db.DateTime, default=db.func.current_timestamp())
     date_modified = db.Column(db.DateTime, default=db.func.current_timestamp(),
                               onupdate=db.func.current_timestamp())
-    user = db.relationship("User", back_populates="user_bucketlists")
 
     def __init__(self, name, created_by):
         """Initialize tables with name"""

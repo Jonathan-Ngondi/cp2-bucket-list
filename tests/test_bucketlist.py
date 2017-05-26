@@ -1,6 +1,5 @@
 import unittest
 from flask_testing import TestCase
-import os
 import json 
 from app import create_app, db
 from app.v1.models import User
@@ -75,7 +74,6 @@ class BucketListTestCases(unittest.TestCase):
     def test_login_user_token_generated(self):
         """Test to ensure that a token is assigned when a user logs in"""
         response = self.client().post('api/v1/auth/login', data=self.user_login)
-        json_dict = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
         self.assertIn('token', response.data)
 
@@ -145,7 +143,7 @@ class BucketListTestCases(unittest.TestCase):
         self.assertEqual(resp.status_code, 201)
         new_resp = json.dumps({"bucketlist_item":"Go to Spain."})
         put = self.client().put('/api/v1/bucketlists/1/items/1', headers={"token":self.token}, data = new_resp)
-        self.assertEqual(res.status_code, 201)
+        self.assertEqual(put.status_code, 201)
     
     def test_delete_bucketlist_item(self):
         """Tests that an item can be deleted from a bucketlist."""
