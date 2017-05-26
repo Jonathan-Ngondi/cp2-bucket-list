@@ -8,7 +8,7 @@ import datetime
 
 
 class User(db.Model):
-    """Class for creating Bucketlist schema,as well as CRUD methods, as well as static methods 
+    """Class for creating Bucketlist schema,as well as CRUD methods, as well as static methods
        for user validation, as well as user verification.
     """
 
@@ -24,8 +24,7 @@ class User(db.Model):
         self.username = username
         self.email = email
         self.password = password
-        self.created_at = datetime.datetime.now()
-    
+        self.created_at = datetime.datetime.now()    
 
     @staticmethod
     def hash_password(password):
@@ -37,6 +36,7 @@ class User(db.Model):
         """Checks and verifies the password of a user login."""
         return check_password_hash(hash,password)
     
+    @staticmethod
     def generate_token(self, data, secret):
         """Generates a token for user session."""
         return jwt.encode(data, secret, exp=86400)

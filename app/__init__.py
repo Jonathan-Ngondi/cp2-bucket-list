@@ -14,10 +14,7 @@ db = SQLAlchemy()
 def create_app(config_name):
     from app.v1.models import User, Bucketlist, Items
     app = Flask(__name__)
-    api = Blueprint('api',__name__)
-    app.config.from_object(app_config[config_name])
-    app.register_blueprint(api, url_prefix='/api/v1.0')
-    app.config['JSON_SORT_KEYS']
+    app.config.from_object(app_config['development'])
     secret = app.config['SECRET_KEY']
     db.init_app(app)
     with app.app_context():
